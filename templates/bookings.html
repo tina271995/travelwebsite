@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Trip</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <header>
+        <a href="/" class="logo">🏝 TravelGo</a>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/bookings">Book Now</a>
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+            <a href="/logout" id="logout" style="display:none;">Logout</a>
+        </nav>
+    </header>
+    
+    <script>
+        // Check if user is logged in
+        const loggedInUser = document.cookie.split('; ').find(row => row.startsWith('logged_in_user='));
+        if (loggedInUser) {
+            document.querySelector('a[href="/login"]').style.display = 'none';
+            document.querySelector('a[href="/signup"]').style.display = 'none';
+            document.getElementById('logout').style.display = 'inline-block';
+        }
+    
+        // Logout Functionality
+        document.getElementById("logout").addEventListener("click", function () {
+            document.cookie = "logged_in_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = "/";
+        });
+    </script>
+    
+
+    <div class="booking-container">
+        <div class="booking-left">
+            <h3 class="sub-heading">Best Destination around the world</h3>
+            <h1 class="main-heading">Travel, enjoy and live a new and full life</h1>
+
+            <form id="booking-form">
+                <label for="destination">Destination:</label>
+                <input type="text" id="destination" name="destination" required placeholder="Enter Destination">
+
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date" required>
+
+                <label for="passengers">Passengers:</label>
+                <input type="number" id="passengers" name="passengers" required placeholder="Enter Number of Passengers">
+
+                <label for="class">Class:</label>
+                <select id="class" name="class" required>
+                    <option value="Economy">Economy</option>
+                    <option value="Business">Business</option>
+                    <option value="First Class">First Class</option>
+                </select>
+
+                <button type="button" id="book-now" class="button-primary">Book Now</button>
+            </form>
+
+            <div class="whatsapp-container">
+                <a id="whatsapp-link" href="#" class="whatsapp-link" target="_blank">
+                    <img src="/static/images/whatsapp_logo.jpg" alt="WhatsApp" class="whatsapp-icon">
+                    <span>Contact for Booking</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="booking-right">
+            <img src="/static/images/khem_villas.jpg" alt="Resort Image" class="booking-image">
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("book-now").addEventListener("click", function () {
+            const destination = document.getElementById("destination").value;
+            const date = document.getElementById("date").value;
+            const passengers = document.getElementById("passengers").value;
+            const travelClass = document.getElementById("class").value;
+
+            if (!destination || !date || !passengers || !travelClass) {
+                alert("Please fill in all the details!");
+                return;
+            }
+
+            // Send data to FastAPI to store in SQLite
+            fetch("/save_booking/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(date)}&passengers=${encodeURIComponent(passengers)}&travel_class=${encodeURIComponent(travelClass)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert("Booking saved successfully!");
+                    
+                    // Generate WhatsApp link after saving the booking
+                    const phoneNumber = "7499857810";  // Replace with your WhatsApp number
+                    const message = `Hi, I want to book a trip.
+                    Destination: ${destination}
+                    Date: ${date}
+                    Passengers: ${passengers}
+                    Class: ${travelClass}`;
+
+                    const encodedMessage = encodeURIComponent(message);
+                    const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+                    document.getElementById("whatsapp-link").href = whatsappLink;
+                    window.open(whatsappLink, "_blank");
+                } else {
+                    alert("Error saving booking: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+
+</body>
+</html>
