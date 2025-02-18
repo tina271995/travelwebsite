@@ -1,5 +1,5 @@
 fastapi
 uvicorn
 jinja2
-sqlite3
+pysqlite3
 python-multipart  # Required for form handling
